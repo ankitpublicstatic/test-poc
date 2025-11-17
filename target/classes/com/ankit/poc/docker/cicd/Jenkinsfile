@@ -1,0 +1,135 @@
+pipeline {
+    agent any
+
+    environment {
+        // Change according to your setup
+        DOCKER_IMAGE = "test-poc"
+        DOCKER_TAG = "latest"
+        AWS_REGION = "ap-south-1"
+        ECR_REGISTRY = "<your_account_id>.dkr.ecr.ap-south-1.amazonaws.com"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Maven Project') {
+            steps {
+                sh './mvnw clean package -DskipTests'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                sh './mvnw test'
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Login to AWS ECR') {
+            steps {
+                sh '''
+                    aws ecr get-login-password --region ${AWS_REGION} \
+                    | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${ECR_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                '''
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                sh '''
+                    docker push ${ECR_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                '''
+            }
+        }
+		stage('DockerHub Login') {
+		    steps {
+		        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+		            sh 'docker login -u $USER -p $PASS'
+		            sh '''
+					docker tag test-poc:latest $USER/test-poc:latest
+					docker push $USER/test-poc:latest
+					'''
+
+		        }
+		    }
+		}
+
+        stage('Deploy to Kubernetes') {
+            when {
+                expression { return fileExists('k8s/deployment.yaml') }
+            }
+            steps {
+                sh '''
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
+                    kubectl apply -f k8s/hpa.yaml || true
+                '''
+            }
+        }
+        
+        stage('Deploy to GKE') {
+		    steps {
+		        sh '''
+		            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+		            gcloud container clusters get-credentials YOUR_CLUSTER --zone asia-south1 --project YOUR_PROJECT
+		            kubectl apply -f k8s/
+		        '''
+		    }
+		}
+
+
+    } // stages
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+    }
+}
+
+
+| Stage         | Description                         |
+| ------------- | ----------------------------------- |
+| Checkout      | Pulls code from GitHub              |
+| Build         | mvn package                         |
+| Test          | Runs unit tests and reports         |
+| AWS ECR Login | Uses `aws-cli`                      |
+| Docker Build  | Builds local Docker image           |
+| Docker Push   | Pushes to AWS ECR                   |
+| K8s Deploy    | Deploys to cluster (if YAML exists) |
+
+
+Requirements on Jenkins Server
+Install Plugins:
+
+✔ Docker Pipeline
+✔ AWS Credentials Plugin
+✔ Kubernetes CLI Plugin (optional)
+
+🔐 Store Secrets in Jenkins Credentials:
+| Credential ID           | Type        | Value              |
+| ----------------------- | ----------- | ------------------ |
+| `aws-access-key-id`     | text        | AWS key            |
+| `aws-secret-access-key` | text        | AWS secret         |
+| `kubeconfig`            | secret file | kubeconfig for k8s |
+| `dockerhub-user`        | username    | DockerHub username |
+| `dockerhub-pass`        | password    | DockerHub password |
+

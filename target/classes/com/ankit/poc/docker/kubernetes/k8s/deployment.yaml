@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-poc
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: test-poc
+  template:
+    metadata:
+      labels:
+        app: test-poc
+    spec:
+      containers:
+        - name: test-poc
+          image: test-poc:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
