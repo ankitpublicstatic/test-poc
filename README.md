@@ -1,17 +1,16 @@
 # test-poc
-# POC
 
 # CI/CD Pipeline Guide for Java Spring Boot Application
 
-# This project demonstrates a complete CI/CD ecosystem for a Java Spring Boot application with multiple deployment pipelines:
+This project demonstrates a complete CI/CD ecosystem for a Java Spring Boot application with multiple deployment pipelines:
 
-# Docker (multi-stage & simple builds)
+Docker (multi-stage & simple builds)
 
-# Jenkins Pipeline (AWS ECR + Kubernetes deployment)
+Jenkins Pipeline (AWS ECR + Kubernetes deployment)
 
-# GitHub Actions CI/CD
+GitHub Actions CI/CD
 
-# GCP Cloud Build + Cloud Run deployment
+GCP Cloud Build + Cloud Run deployment
 
 Kubernetes deployment (GKE/EKS)
 
