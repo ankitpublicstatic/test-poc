@@ -37,3 +37,12 @@ ENTRYPOINT [ "java", "-jar", "app.jar" ]
 # docker build -t test-poc:latest .
 # docker run -p 8080:8080 test-poc:latest
 
+#kubectl apply -f k8s/deployment.yaml
+#kubectl apply -f k8s/service.yaml
+#kubectl apply -f k8s/hpa.yaml
+#kubectl apply -f k8s/configmap.yaml
+
+#kubectl get pods
+#kubectl get svc
+#kubectl describe deployment test-poc
+

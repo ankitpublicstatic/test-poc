@@ -15,6 +15,7 @@ spec:
       containers:
         - name: test-poc
           image: test-poc:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           envFrom:
