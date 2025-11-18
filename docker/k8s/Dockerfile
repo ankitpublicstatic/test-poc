@@ -1,4 +1,5 @@
 # Goal -> Build Jar Inside Docker -> Produce small runtime image
+
 # -----------------------------------------------------------
 # STAGE 1: BUILD STAGE
 # -----------------------------------------------------------
@@ -12,7 +13,7 @@ COPY pom.xml .
 RUN ./mvnw dependency:resolve
 
 COPY src src
-RUN .mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 	
 
 # -----------------------------------------------------------
@@ -22,7 +23,7 @@ RUN .mvnw clean package -DskipTests
 	
 FROM eclipse-temurin:17-jre
 
-ARG JAR_FILE = /app/target/*.jar
+ARG JAR_FILE=/app/target/*.jar
 COPY --from=build ${JAR_FILE} app.jar
 
 EXPOSE 8080
@@ -33,6 +34,6 @@ ENTRYPOINT [ "java", "-jar", "app.jar" ]
 
 # Build & Run
 
-# docker build -t test-poc:multi .
-# docker run -p 8080:8080 test-poc:multi
+# docker build -t test-poc:latest .
+# docker run -p 8080:8080 test-poc:latest
 

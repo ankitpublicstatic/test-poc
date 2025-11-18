@@ -12,7 +12,7 @@ COPY pom.xml .
 RUN ./mvnw dependency:resolve
 
 COPY src src
-RUN .mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 	
 
 # -----------------------------------------------------------
@@ -22,7 +22,7 @@ RUN .mvnw clean package -DskipTests
 	
 FROM eclipse-temurin:17-jre
 
-ARG JAR_FILE = /app/target/*.jar
+ARG JAR_FILE=/app/target/*.jar
 COPY --from=build ${JAR_FILE} app.jar
 
 EXPOSE 8080
