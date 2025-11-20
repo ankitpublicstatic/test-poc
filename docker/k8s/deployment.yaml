@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: test-poc
-          image: test-poc:latest
+          image: ankitjava242/test-poc:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
